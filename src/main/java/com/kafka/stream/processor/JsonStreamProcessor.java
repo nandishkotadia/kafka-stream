@@ -16,48 +16,50 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.Gson;
 import com.kafka.stream.config.KafkaStreamConfig;
 import com.kafka.stream.model.Message;
-import com.kafka.stream.util.Constants;
 
 @Component
-public class StreamProcessor {
-	
+public class JsonStreamProcessor {
+
 	@Autowired
 	private KafkaStreamConfig kafkaStreamConfig;
 	
 	@Autowired
 	private Gson gson ;
 	
-	@Value("${kafka.topic.text.message}")
-	private String KAFKA_TOPIC_TEXT_MESSAGE;
-	
 	@Value("${kafka.topic.json.message}")
 	private String KAFKA_TOPIC_JSON_MESSAGE;
 	
-	private Logger logger = LoggerFactory.getLogger(StreamProcessor.class);
+	private Logger logger = LoggerFactory.getLogger(JsonStreamProcessor.class);
 	
-	public void process(String streamEvent, String threadName){
+	@Value("${data.validate.url}")
+	private String validateUrl;
+	
+	@Autowired
+	private RestTemplate restTemplate;
+	
+	public void process(String streamEvent, String threadName) {
+		
 		Properties streamsConfiguration = kafkaStreamConfig.getStreamConfiguration(streamEvent,threadName);
 	    Serde<String> stringSerde = Serdes.String();
 
 		StreamsBuilder builder = new StreamsBuilder();
 		
-		//read the text message topic into stream
-		KStream<String, String> textStream = builder.stream(KAFKA_TOPIC_TEXT_MESSAGE, Consumed.with(stringSerde, stringSerde));
+		//read the json message topic into stream
+		KStream<String, String> jsonStream = builder.stream(KAFKA_TOPIC_JSON_MESSAGE, Consumed.with(stringSerde, stringSerde));
 		
-		// Map text values to java object, filter the unwanted messages, convert it into json. 
-		textStream.mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null)).map(new KeyValueMapper<String, Message, KeyValue<String, String>>() { 
+		jsonStream.mapValues(v -> verifyData(v)).filter((k,v) -> (v!=null)).map(new KeyValueMapper<String, Message, KeyValue<String, String>>() { 
             @Override 
             public KeyValue<String, String> apply(String key, Message value) { 
                 return new KeyValue<>(null, gson.toJson(value));
             }});
 		
-		//output the json message in json topic
-		textStream.to(KAFKA_TOPIC_JSON_MESSAGE);
+		//output the json message in final output topic
+		jsonStream.to(KAFKA_TOPIC_JSON_MESSAGE);
 		
 		Topology topology = builder.build();
 		KafkaStreams streams = new KafkaStreams(topology, streamsConfiguration);
@@ -70,15 +72,20 @@ public class StreamProcessor {
 		});
 		streams.start();
 		Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
+		
 	}
 
-	private Message mapTextValues(String message) {
-		if(StringUtils.isEmpty(message)) {
-			return null;
+	private Message verifyData(String jsonMessage) {
+		Message m = null;
+		try {
+			m = gson.fromJson(jsonMessage, Message.class);
+			Message response = restTemplate.postForObject(validateUrl, m, Message.class);
+			return response;
+		}catch(Exception e) {
+			logger.error("Error with message: "+jsonMessage);
+			logger.error("Error in verifyData()",e);
 		}
-		String[] fieldValues = message.split(Constants.FIELD_DELIMITER);
-		Message m = new Message();
-		//m.setName(String.valueOf(Math.random()));
-		return m;
+		return null;
 	}
+
 }

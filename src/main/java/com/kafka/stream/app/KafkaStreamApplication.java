@@ -6,14 +6,19 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
-import com.kafka.stream.processor.StreamProcessor;
+import com.kafka.stream.processor.JsonStreamProcessor;
+import com.kafka.stream.processor.TextStreamProcessor;
+import com.kafka.stream.util.Constants;
 
 @SpringBootApplication
 @ComponentScan(basePackages="com.kafka.stream")
-public class KafkaStreamApplication implements CommandLineRunner{
+public class KafkaStreamApplication implements CommandLineRunner, Constants{
 
 	@Autowired
-	private StreamProcessor streamProcessor;
+	private TextStreamProcessor textStreamProcessor;
+	
+	@Autowired
+	private JsonStreamProcessor jsonStreamProcessor;
 	
 	public static void main(String[] args) {
 		SpringApplication.run(KafkaStreamApplication.class, args);
@@ -25,6 +30,10 @@ public class KafkaStreamApplication implements CommandLineRunner{
 		String streamEvent = args.length>0?args[0]:"text_stream";
 		String threadName = args.length>1?args[1]:"common";
 		
-		streamProcessor.process(streamEvent, threadName);
+		if(TEXT_STREAM.equals(streamEvent)) {
+			textStreamProcessor.process(streamEvent, threadName);
+		} else if(JSON_STREAM.equals(streamEvent)) {
+			jsonStreamProcessor.process(streamEvent, threadName);
+		}
 	}
 }
