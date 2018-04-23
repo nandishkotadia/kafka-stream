@@ -50,7 +50,7 @@ public class TextStreamProcessor {
 		KStream<String, String> textStream = builder.stream(KAFKA_TOPIC_TEXT_MESSAGE, Consumed.with(stringSerde, stringSerde));
 		
 		// Map text values to java object, filter the unwanted messages, convert it into json. 
-		textStream.mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null)).map(new KeyValueMapper<String, Message, KeyValue<String, String>>() { 
+		textStream = textStream.mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null && "POS".equals(v.getAdr_box_nbr()))).map(new KeyValueMapper<String, Message, KeyValue<String, String>>() { 
             @Override 
             public KeyValue<String, String> apply(String key, Message value) { 
                 return new KeyValue<>(null, gson.toJson(value));
@@ -78,7 +78,7 @@ public class TextStreamProcessor {
 		}
 		String[] fieldValues = message.split(Constants.FIELD_DELIMITER);
 		Message m = new Message();
-		//m.setName(String.valueOf(Math.random()));
+		m.setAdr_box_nbr(fieldValues[0]);
 		return m;
 	}
 }
