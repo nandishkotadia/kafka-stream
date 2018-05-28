@@ -20,7 +20,7 @@ import org.springframework.util.StringUtils;
 
 import com.google.gson.Gson;
 import com.kafka.stream.config.KafkaStreamConfig;
-import com.kafka.stream.model.Message;
+import com.kafka.stream.model.Payload;
 import com.kafka.stream.util.Constants;
 
 @Component
@@ -50,9 +50,9 @@ public class TextStreamProcessor {
 		KStream<String, String> textStream = builder.stream(KAFKA_TOPIC_TEXT_MESSAGE, Consumed.with(stringSerde, stringSerde));
 		
 		// Map text values to java object, filter the unwanted messages, convert it into json. 
-		textStream = textStream.mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null && "POS".equals(v.getAdr_box_nbr()))).map(new KeyValueMapper<String, Message, KeyValue<String, String>>() { 
+		textStream = textStream.mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null && "POS".equals(v.getAdr_box_nbr()))).map(new KeyValueMapper<String, Payload, KeyValue<String, String>>() { 
             @Override 
-            public KeyValue<String, String> apply(String key, Message value) { 
+            public KeyValue<String, String> apply(String key, Payload value) { 
                 return new KeyValue<>(null, gson.toJson(value));
             }});
 		
@@ -72,12 +72,13 @@ public class TextStreamProcessor {
 		Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
 	}
 
-	private Message mapTextValues(String message) {
+	private Payload mapTextValues(String message) {
 		if(StringUtils.isEmpty(message)) {
 			return null;
 		}
+		
 		String[] fieldValues = message.split(Constants.FIELD_DELIMITER);
-		Message m = new Message();
+		Payload m = new Payload();
 		m.setAdr_box_nbr(fieldValues[0]);
 		return m;
 	}

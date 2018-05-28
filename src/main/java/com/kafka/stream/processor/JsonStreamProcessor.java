@@ -13,14 +13,24 @@ import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.Gson;
 import com.kafka.stream.config.KafkaStreamConfig;
-import com.kafka.stream.model.Message;
+import com.kafka.stream.model.AccessTokenDTO;
+import com.kafka.stream.model.Payload;
+import com.kafka.stream.model.RequestDTO;
+import com.kafka.stream.model.ResponseDTO;
+import com.kafka.stream.model.ResultPayload;
 
 @Component
 public class JsonStreamProcessor {
@@ -39,6 +49,15 @@ public class JsonStreamProcessor {
 	@Value("${data.validate.url}")
 	private String validateUrl;
 	
+	@Value("${data.accesstoken.url}")
+	private String accessTokenUrl;
+	
+	@Value("${client.id}")
+	private String clientId;
+	
+	@Value("${client.secret}")
+	private String clientSecret;
+	
 	@Autowired
 	private RestTemplate restTemplate;
 	
@@ -52,9 +71,9 @@ public class JsonStreamProcessor {
 		//read the json message topic into stream
 		KStream<String, String> jsonStream = builder.stream(KAFKA_TOPIC_JSON_MESSAGE, Consumed.with(stringSerde, stringSerde));
 		
-		jsonStream.mapValues(v -> verifyData(v)).filter((k,v) -> (v!=null)).map(new KeyValueMapper<String, Message, KeyValue<String, String>>() { 
+		jsonStream.mapValues(v -> verifyData(v)).filter((k,v) -> (v!=null)).map(new KeyValueMapper<String, Payload, KeyValue<String, String>>() { 
             @Override 
-            public KeyValue<String, String> apply(String key, Message value) { 
+            public KeyValue<String, String> apply(String key, Payload value) { 
                 return new KeyValue<>(null, gson.toJson(value));
             }});
 		
@@ -75,15 +94,44 @@ public class JsonStreamProcessor {
 		
 	}
 
-	private Message verifyData(String jsonMessage) {
-		Message m = null;
+	private Payload verifyData(String jsonMessage) {
+		String token = getAccessToken();
+		Payload m = null;
 		try {
-			m = gson.fromJson(jsonMessage, Message.class);
-			Message response = restTemplate.postForObject(validateUrl, m, Message.class);
-			return response;
+			m = gson.fromJson(jsonMessage, Payload.class);
+			RequestDTO requestDTO = new RequestDTO();
+			try {
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.APPLICATION_JSON);
+				headers.add("Authorization", token);
+				HttpEntity entity = new HttpEntity<>(requestDTO, headers);
+				ResponseDTO response = restTemplate.postForObject(validateUrl, entity, ResponseDTO.class);
+				ResultPayload payload = new ResultPayload();
+				BeanUtils.copyProperties(payload, m);
+				payload.setContractId(response.getData().getContractId());
+				return payload;
+			}catch(Exception e) {
+				logger.error("Error in verifyData(): ", e);
+			}
+			return null;
 		}catch(Exception e) {
 			logger.error("Error with message: "+jsonMessage);
 			logger.error("Error in verifyData()",e);
+		}
+		return null;
+	}
+
+	private String getAccessToken() {
+		MultiValueMap params = new LinkedMultiValueMap<>();
+		params.add("client_id", clientId);
+		params.add("client_secret", clientSecret);
+		params.add("grant_type", "client_credentials");
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		HttpEntity entity = new HttpEntity<>(params, headers);
+		AccessTokenDTO accessTokenResponse = restTemplate.postForObject(accessTokenUrl, entity, AccessTokenDTO.class);
+		if(accessTokenResponse != null) {
+			return "Bearer " + accessTokenResponse.getAccess_token();
 		}
 		return null;
 	}
