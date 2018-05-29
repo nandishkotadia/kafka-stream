@@ -1,5 +1,6 @@
 package com.kafka.stream.processor;
 
+import java.util.Date;
 import java.util.Properties;
 
 import org.apache.kafka.common.serialization.Serde;
@@ -22,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.Gson;
@@ -60,6 +62,10 @@ public class JsonStreamProcessor {
 	
 	@Autowired
 	private RestTemplate restTemplate;
+	
+	private String accessToken;
+	
+	private Date expiryDate;
 	
 	public void process(String streamEvent, String threadName) {
 		
@@ -122,6 +128,10 @@ public class JsonStreamProcessor {
 	}
 
 	private String getAccessToken() {
+		Date currentDate = new Date();
+		if(!StringUtils.isEmpty(accessToken) && currentDate.before(expiryDate)) {
+			return accessToken;
+		}
 		MultiValueMap params = new LinkedMultiValueMap<>();
 		params.add("client_id", clientId);
 		params.add("client_secret", clientSecret);
@@ -131,8 +141,13 @@ public class JsonStreamProcessor {
 		HttpEntity entity = new HttpEntity<>(params, headers);
 		AccessTokenDTO accessTokenResponse = restTemplate.postForObject(accessTokenUrl, entity, AccessTokenDTO.class);
 		if(accessTokenResponse != null) {
-			return "Bearer " + accessTokenResponse.getAccess_token();
+			accessToken = "Bearer " + accessTokenResponse.getAccess_token();
+			Long expires_in = accessTokenResponse.getExpires_in();
+			Long expireDateLongValue = currentDate.getTime() + ((expires_in - 300 ) * 1000);
+			expiryDate = new Date(expireDateLongValue);
+			return accessToken;
 		}
+		
 		return null;
 	}
 
