@@ -2,7 +2,7 @@ package com.kafka.stream.model;
 
 public class ResponseDTO {
 	private MetaData meta;
-	private Data data;
+	private Long data;
 	private Status status;
 	public MetaData getMeta() {
 		return meta;
@@ -10,10 +10,10 @@ public class ResponseDTO {
 	public void setMeta(MetaData meta) {
 		this.meta = meta;
 	}
-	public Data getData() {
+	public Long getData() {
 		return data;
 	}
-	public void setData(Data data) {
+	public void setData(Long data) {
 		this.data = data;
 	}
 	public Status getStatus() {

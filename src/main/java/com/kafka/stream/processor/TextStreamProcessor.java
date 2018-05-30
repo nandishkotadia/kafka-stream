@@ -50,7 +50,7 @@ public class TextStreamProcessor {
 		KStream<String, String> textStream = builder.stream(KAFKA_TOPIC_TEXT_MESSAGE, Consumed.with(stringSerde, stringSerde));
 		
 		// Map text values to java object, filter the unwanted messages, convert it into json. 
-		textStream = textStream.mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null && "POS".equals(v.getAdr_box_nbr()))).map(new KeyValueMapper<String, Payload, KeyValue<String, String>>() { 
+		textStream = textStream.mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null)).map(new KeyValueMapper<String, Payload, KeyValue<String, String>>() { 
             @Override 
             public KeyValue<String, String> apply(String key, Payload value) { 
                 return new KeyValue<>(null, gson.toJson(value));
@@ -79,7 +79,28 @@ public class TextStreamProcessor {
 		
 		String[] fieldValues = message.split(Constants.FIELD_DELIMITER);
 		Payload m = new Payload();
-		m.setAdr_box_nbr(fieldValues[0]);
+		m.setClm_loc_typ_cd(fieldValues[0]);
+		m.setClm_adjd_pltfm_id(fieldValues[1]);
+		m.setClm_fl_id(fieldValues[2]);
+		m.setStrt_srvc_dt(fieldValues[3]);
+		m.setSubgroup(fieldValues[4]);
+		m.setMng_hlth_subpln_nm(fieldValues[5]);
+		m.setMng_hlth_pln_nm(fieldValues[6]);
+		m.setSrvc_loc_prov_id(fieldValues[7]);
+		m.setClm_id(fieldValues[8]);
+		m.setPtnt_src_sys_id(getLongValue(fieldValues[9]));
+		m.setBus_seg_id(fieldValues[10]);
+		m.setPrdct_desc(fieldValues[11]);
+		m.setSrvc_bil_chrg_amt(fieldValues[12]);
+		m.setDed_ln_amt(fieldValues[13]);
+		m.setBen_copay_ln_amt(fieldValues[14]);
+		m.setBen_pay_ln_amt(fieldValues[15]);
+		m.setSrvc_dt(fieldValues[16]);
+		
 		return m;
+	}
+	
+	private Long getLongValue(String value) {
+		return StringUtils.isEmpty(value)?null:Long.parseLong(value);
 	}
 }
