@@ -1,5 +1,7 @@
 package com.kafka.stream.processor;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
@@ -68,6 +70,8 @@ public class JsonStreamProcessor {
 	private String accessToken;
 	
 	private Date expiryDate;
+	private static String TZ_DATEFORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
+	private static String INPUT_DATEFORMAT = "yyyy-MM-ddHH:mm:ss";
 	
 	public void process(String streamEvent, String threadName) {
 		
@@ -116,7 +120,7 @@ public class JsonStreamProcessor {
 			RequestDTO requestDTO = new RequestDTO();
 			requestDTO.setBusinessSegment(m.getBus_seg_id());
 			requestDTO.setPlatform(m.getClm_adjd_pltfm_id());
-			requestDTO.setStartServiceDate(m.getStrt_srvc_dt());
+			requestDTO.setStartServiceDate(getFormattedTZDateFromString(m.getStrt_srvc_dt()));
 			requestDTO.setProduct(m.getPrdct_desc());
 			requestDTO.setProviderId(m.getSrvc_loc_prov_id());
 			requestDTO.setSubgroup(m.getSubgroup());
@@ -202,6 +206,23 @@ public class JsonStreamProcessor {
 	
 	private Long getLongValue(String value) {
 		return StringUtils.isEmpty(value)?null:Long.parseLong(value);
+	}
+	
+	private String getFormattedTZDateFromString(String strt_srvc_dt) throws ParseException {
+		Date d = stringToDateFormat(strt_srvc_dt, INPUT_DATEFORMAT);
+		return dateToStringFormat(d, TZ_DATEFORMAT);
+	}
+	
+	public static Date stringToDateFormat(String dateInString, String format) throws ParseException {
+		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+		Date date = dateFormat.parse(dateInString);
+		return date;
+	}
+	
+	public static String dateToStringFormat(Date date, String format) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+		String dateStr = dateFormat.format(date);
+		return dateStr;
 	}
 
 }
