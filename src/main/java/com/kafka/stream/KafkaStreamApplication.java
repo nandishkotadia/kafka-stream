@@ -27,13 +27,15 @@ public class KafkaStreamApplication implements CommandLineRunner, Constants{
 	@Override
 	public void run(String... args) throws Exception {
 		
-		String streamEvent = args.length>0?args[0]:"text_stream";
+		String streamEvent = args.length>0?args[0]:"json_stream";
 		String threadName = args.length>1?args[1]:"common";
 		
-		if(TEXT_STREAM.equals(streamEvent)) {
+		jsonStreamProcessor.process(streamEvent, threadName);
+		
+		/*if(TEXT_STREAM.equals(streamEvent)) {
 			textStreamProcessor.process(streamEvent, threadName);
 		} else if(JSON_STREAM.equals(streamEvent)) {
-			jsonStreamProcessor.process(streamEvent, threadName);
-		}
+			
+		}*/
 	}
 }
