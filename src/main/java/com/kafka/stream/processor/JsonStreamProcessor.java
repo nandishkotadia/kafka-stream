@@ -79,7 +79,7 @@ public class JsonStreamProcessor {
 		//read the json message topic into stream
 		KStream<String, String> jsonStream = builder.stream(KAFKA_TOPIC_TEXT_MESSAGE, Consumed.with(stringSerde, stringSerde));
 		
-		jsonStream.mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null))
+		jsonStream = jsonStream.mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null))
 				  .mapValues(v -> verifyData(v)).filter((k,v) -> (v!=null))
 				  .map(new KeyValueMapper<String, Payload, KeyValue<String, String>>() { 
 			            @Override 

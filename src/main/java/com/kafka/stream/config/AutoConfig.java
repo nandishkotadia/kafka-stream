@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -37,12 +38,17 @@ public class AutoConfig{
 		return restTemplate;
 	}
 	
+         
 	public StringHttpMessageConverter stringHttpMessageConverter(){
 		return new StringHttpMessageConverter();
 	}
 	
 	public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter(){
-		return new MappingJackson2HttpMessageConverter();
+		List a = new ArrayList();
+		a.add(MediaType.ALL);
+		MappingJackson2HttpMessageConverter c = new MappingJackson2HttpMessageConverter();
+		c.setSupportedMediaTypes(a);
+		return c;
 	}
 	
 }

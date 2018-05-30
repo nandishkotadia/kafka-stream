@@ -7,15 +7,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 import com.kafka.stream.processor.JsonStreamProcessor;
-import com.kafka.stream.processor.TextStreamProcessor;
 import com.kafka.stream.util.Constants;
 
 @SpringBootApplication
 @ComponentScan(basePackages="com.kafka.stream")
 public class KafkaStreamApplication implements CommandLineRunner, Constants{
 
-	@Autowired
-	private TextStreamProcessor textStreamProcessor;
+	/*@Autowired
+	private TextStreamProcessor textStreamProcessor;*/
 	
 	@Autowired
 	private JsonStreamProcessor jsonStreamProcessor;
