@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -164,7 +165,8 @@ public class JsonStreamProcessor {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		HttpEntity entity = new HttpEntity<>(params, headers);
-		AccessTokenDTO accessTokenResponse = restTemplate.postForObject(accessTokenUrl, entity, AccessTokenDTO.class);
+		ResponseEntity<AccessTokenDTO> result = restTemplate.postForEntity(accessTokenUrl, entity, AccessTokenDTO.class);
+		AccessTokenDTO accessTokenResponse = result.getBody();
 		if(accessTokenResponse != null) {
 			accessToken = "Bearer " + accessTokenResponse.getAccess_token();
 			Long expires_in = accessTokenResponse.getExpires_in();
