@@ -32,24 +32,20 @@ public class KafkaStreamConfig {
 		streamsConfiguration.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 		streamsConfiguration.put(StreamsConfig.APPLICATION_ID_CONFIG, applicationId+"-"+appEnv);
 	    streamsConfiguration.put(StreamsConfig.CLIENT_ID_CONFIG, applicationId+"-"+appEnv+"-"+threadName);
-	    
-	    streamsConfiguration.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers );
+		streamsConfiguration.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers );
 	    streamsConfiguration.put(StreamsConfig.REPLICATION_FACTOR_CONFIG, replicationFactor);
-	    streamsConfiguration.put(StreamsConfig.KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
-	    streamsConfiguration.put(StreamsConfig.VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+	    streamsConfiguration.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+	    streamsConfiguration.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 	    streamsConfiguration.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, streamCommitIntervalMs);
 	    streamsConfiguration.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, numberStreamThreads);
-	    streamsConfiguration.put(StreamsConfig.TIMESTAMP_EXTRACTOR_CLASS_CONFIG, WallclockTimestampExtractor.class);
-	    
-	    streamsConfiguration.put(StreamsConfig.RECEIVE_BUFFER_CONFIG,"1048576");
+	    streamsConfiguration.put(StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG, WallclockTimestampExtractor.class);
+		streamsConfiguration.put(StreamsConfig.RECEIVE_BUFFER_CONFIG,"1048576");
 	    streamsConfiguration.put(StreamsConfig.SEND_BUFFER_CONFIG,"1048576");
-	    
-	    streamsConfiguration.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, "65000");
+		streamsConfiguration.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, "65000");
 	    streamsConfiguration.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "60000");
 	    //streamsConfiguration.put(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG, "15048576");
 	    //streamsConfiguration.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG,Arrays.asList(org.apache.kafka.streams.processor.internals.assignment.StickyTaskAssignor.class));
-	    
-	    //streamsConfiguration.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG,"15048576");
+		//streamsConfiguration.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG,"15048576");
 	    //streamsConfiguration.put(ProducerConfig.PARTITIONER_CLASS_CONFIG,net.media.max.kafka.stream.config.RoundRobinPartitioner.class);
 	    //streamsConfiguration.put("rebalance.max.retries", "16");
 	    //streamsConfiguration.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE);

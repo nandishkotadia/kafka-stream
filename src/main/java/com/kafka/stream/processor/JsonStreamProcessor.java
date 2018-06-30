@@ -1,7 +1,5 @@
 package com.kafka.stream.processor;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
@@ -112,6 +110,7 @@ public class JsonStreamProcessor {
 	private Payload verifyData(Payload m) {
 		try {
 			String token = getAccessToken();
+			logger.info("Token: "+token);
 			if(StringUtils.isEmpty(token)) {
 				logger.info("Input Msg:"+ gson.toJson(m));
 				logger.info("Token is empty");
@@ -121,8 +120,9 @@ public class JsonStreamProcessor {
 			RequestDTO requestDTO = new RequestDTO();
 			requestDTO.setBusinessSegment(m.getBus_seg_id());
 			requestDTO.setPlatform(m.getClm_adjd_pltfm_id());
-			requestDTO.setStartServiceDate(getFormattedTZDateFromString(m.getStrt_srvc_dt()));
-			requestDTO.setProduct(m.getPrdct_desc());
+			requestDTO.setStartServiceDate(m.getStrt_srvc_dt());
+//			requestDTO.setStartServiceDate(getFormattedTZDateFromString(m.getStrt_srvc_dt()));
+			requestDTO.setProduct(m.getProduct());
 			requestDTO.setProviderId(m.getSrvc_loc_prov_id());
 			requestDTO.setSubgroup(m.getSubgroup());
 			try {
@@ -133,6 +133,7 @@ public class JsonStreamProcessor {
 				ResponseDTO response = restTemplate.postForObject(validateUrl, entity, ResponseDTO.class);
 				
 				Long contractId = response.getData();
+				logger.info("ContractId: "+contractId);
 				if(contractId == null) {
 					logger.info("Input Msg:"+ gson.toJson(m));
 					logger.info("API Response Msg: "+ gson.toJson(response));
@@ -182,39 +183,39 @@ public class JsonStreamProcessor {
 		if(StringUtils.isEmpty(message)) {
 			return null;
 		}
-		
-		String[] fieldValues = message.split(Constants.FIELD_DELIMITER);
-		Payload m = new Payload();
-		m.setClm_loc_typ_cd(fieldValues[0]);
-		m.setClm_adjd_pltfm_id(fieldValues[1]);
-		m.setClm_fl_id(fieldValues[2]);
-		m.setStrt_srvc_dt(fieldValues[3]);
-		m.setSubgroup(fieldValues[4]);
-		m.setMng_hlth_subpln_nm(fieldValues[5]);
-		m.setMng_hlth_pln_nm(fieldValues[6]);
-		m.setSrvc_loc_prov_id(fieldValues[7]);
-		m.setClm_id(fieldValues[8]);
-		m.setPtnt_src_sys_id(getLongValue(fieldValues[9]));
-		m.setBus_seg_id(fieldValues[10]);
-		m.setPrdct_desc(fieldValues[11]);
-		m.setSrvc_bil_chrg_amt(fieldValues[12]);
-		m.setDed_ln_amt(fieldValues[13]);
-		m.setBen_copay_ln_amt(fieldValues[14]);
-		m.setBen_pay_ln_amt(fieldValues[15]);
-		m.setSrvc_dt(fieldValues[16]);
-		
-		return m;
+		try {
+			String[] fieldValues = message.split(Constants.FIELD_DELIMITER);
+			Payload m = new Payload();
+			m.setClm_loc_typ_cd(fieldValues[0]);
+			m.setClm_adjd_pltfm_id(fieldValues[1]);
+			m.setClm_fl_id(fieldValues[2]);
+			m.setStrt_srvc_dt(fieldValues[3]);
+			m.setSubgroup(fieldValues[4]);
+			m.setMng_hlth_subpln_nm(fieldValues[5]);
+			m.setMng_hlth_pln_nm(fieldValues[6]);
+			m.setSrvc_loc_prov_id(fieldValues[7]);
+			m.setClm_id(fieldValues[8]);
+			m.setPtnt_src_sys_id(getLongValue(fieldValues[9]));
+			m.setBus_seg_id(fieldValues[10]);
+			m.setProduct(fieldValues[11]);
+
+			return m;
+		}catch(Exception e) {
+			logger.info("Text Msg:"+ message);
+			logger.error("Error in mapTextValues(): ", e);
+			return null;
+		}
 	}
 	
 	private Long getLongValue(String value) {
 		return StringUtils.isEmpty(value)?null:Long.parseLong(value);
 	}
 	
-	private String getFormattedTZDateFromString(String strt_srvc_dt) throws ParseException {
+	/*private String getFormattedTZDateFromString(String strt_srvc_dt) throws ParseException {
 		Date d = stringToDateFormat(strt_srvc_dt, INPUT_DATEFORMAT);
 		return dateToStringFormat(d, TZ_DATEFORMAT);
 	}
-	
+
 	public static Date stringToDateFormat(String dateInString, String format) throws ParseException {
 		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
 		Date date = dateFormat.parse(dateInString);
@@ -225,6 +226,6 @@ public class JsonStreamProcessor {
 		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
 		String dateStr = dateFormat.format(date);
 		return dateStr;
-	}
+	} */
 
 }

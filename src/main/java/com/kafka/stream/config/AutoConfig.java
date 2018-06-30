@@ -26,7 +26,7 @@ public class AutoConfig{
 
 	@Bean
 	public Gson gson(){
-		return new GsonBuilder().create();
+		return new GsonBuilder().disableHtmlEscaping().create();
 	}
 	
 	@Bean

@@ -90,13 +90,7 @@ public class TextStreamProcessor {
 		m.setClm_id(fieldValues[8]);
 		m.setPtnt_src_sys_id(getLongValue(fieldValues[9]));
 		m.setBus_seg_id(fieldValues[10]);
-		m.setPrdct_desc(fieldValues[11]);
-		m.setSrvc_bil_chrg_amt(fieldValues[12]);
-		m.setDed_ln_amt(fieldValues[13]);
-		m.setBen_copay_ln_amt(fieldValues[14]);
-		m.setBen_pay_ln_amt(fieldValues[15]);
-		m.setSrvc_dt(fieldValues[16]);
-		
+		m.setProduct(fieldValues[11]);
 		return m;
 	}
 	
