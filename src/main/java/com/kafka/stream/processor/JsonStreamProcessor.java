@@ -1,6 +1,8 @@
 package com.kafka.stream.processor;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.kafka.common.serialization.Serde;
@@ -49,6 +51,9 @@ public class JsonStreamProcessor {
 	@Value("${kafka.topic.text.message}")
 	private String KAFKA_TOPIC_TEXT_MESSAGE;
 	
+	@Value("${kafka.topic.nonpar.json.message}")
+	private String KAFKA_TOPIC_NONPAR_JSON_MESSAGE;
+	
 	private Logger logger = LoggerFactory.getLogger(JsonStreamProcessor.class);
 	
 	@Value("${data.validate.url}")
@@ -82,13 +87,28 @@ public class JsonStreamProcessor {
 		//read the json message topic into stream
 		KStream<String, String> jsonStream = builder.stream(KAFKA_TOPIC_TEXT_MESSAGE, Consumed.with(stringSerde, stringSerde));
 		
-		jsonStream = jsonStream.mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null))
-				  .mapValues(v -> verifyData(v)).filter((k,v) -> (v!=null))
+		KStream<String, Payload>[] multistreams = jsonStream.
+				mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null))
+				.branch((k, v) -> "par".equals(v.getBus_seg_id()),
+						(k, v) -> "nonpar".equals(v.getBus_seg_id()));
+		
+		jsonStream = multistreams[0].mapValues(v -> verifyData(v)).filter((k,v) -> (v!=null))
+					.flatMapValues(v -> flattenValue(v))
 				  .map(new KeyValueMapper<String, Payload, KeyValue<String, String>>() { 
 			            @Override 
 			            public KeyValue<String, String> apply(String key, Payload value) { 
 			                return new KeyValue<>(null, gson.toJson(value));
 			       }});
+		
+		
+		KStream<String, String> nonParStream = multistreams[1]
+									.map(new KeyValueMapper<String, Payload, KeyValue<String, String>>() { 
+									            @Override 
+									            public KeyValue<String, String> apply(String key, Payload value) { 
+									                return new KeyValue<>(null, gson.toJson(value));
+									       }});
+		
+		nonParStream.to(KAFKA_TOPIC_NONPAR_JSON_MESSAGE);
 		
 		//output the json message in final output topic
 		jsonStream.to(KAFKA_TOPIC_JSON_MESSAGE);
@@ -107,6 +127,13 @@ public class JsonStreamProcessor {
 		
 	}
 
+	private List<Payload> flattenValue(Payload p){
+		List<Payload> payloadList = new ArrayList<Payload>();
+		payloadList.add(p);
+		payloadList.add(p);
+		return payloadList;
+	}
+	
 	private Payload verifyData(Payload m) {
 		try {
 			String token = getAccessToken();
