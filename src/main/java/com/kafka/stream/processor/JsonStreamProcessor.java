@@ -77,6 +77,7 @@ public class JsonStreamProcessor {
 	private static String TZ_DATEFORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
 	private static String INPUT_DATEFORMAT = "yyyy-MM-ddHH:mm:ss";
 	
+	@SuppressWarnings("unchecked")
 	public void process(String streamEvent, String threadName) {
 		
 		Properties streamsConfiguration = kafkaStreamConfig.getStreamConfiguration(streamEvent,threadName);
@@ -89,26 +90,24 @@ public class JsonStreamProcessor {
 		
 		KStream<String, Payload>[] multistreams = jsonStream.
 				mapValues(v -> mapTextValues(v)).filter((k,v) -> (v!=null))
-				.branch((k, v) -> "par".equals(v.getBus_seg_id()),
-						(k, v) -> "nonpar".equals(v.getBus_seg_id()));
+				.branch((k, v) -> v!=null);
 		
 		jsonStream = multistreams[0].mapValues(v -> verifyData(v)).filter((k,v) -> (v!=null))
 					.flatMapValues(v -> flattenValue(v))
-				  .map(new KeyValueMapper<String, Payload, KeyValue<String, String>>() { 
+				  .map(new KeyValueMapper<String, Object, KeyValue<String, String>>() { 
 			            @Override 
-			            public KeyValue<String, String> apply(String key, Payload value) { 
+			            public KeyValue<String, String> apply(String key, Object value) { 
 			                return new KeyValue<>(null, gson.toJson(value));
 			       }});
 		
 		
-		KStream<String, String> nonParStream = multistreams[1]
+		/*KStream<String, String> nonParStream = multistreams[1]
 									.map(new KeyValueMapper<String, Payload, KeyValue<String, String>>() { 
 									            @Override 
 									            public KeyValue<String, String> apply(String key, Payload value) { 
 									                return new KeyValue<>(null, gson.toJson(value));
 									       }});
-		
-		nonParStream.to(KAFKA_TOPIC_NONPAR_JSON_MESSAGE);
+		nonParStream.to(KAFKA_TOPIC_NONPAR_JSON_MESSAGE);*/
 		
 		//output the json message in final output topic
 		jsonStream.to(KAFKA_TOPIC_JSON_MESSAGE);
@@ -127,8 +126,9 @@ public class JsonStreamProcessor {
 		
 	}
 
-	private List<Payload> flattenValue(Payload p){
-		List<Payload> payloadList = new ArrayList<Payload>();
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private List flattenValue(Payload p){
+		List payloadList = new ArrayList();
 		payloadList.add(p);
 		payloadList.add(p);
 		return payloadList;
@@ -145,8 +145,8 @@ public class JsonStreamProcessor {
 			}
 			//m = gson.fromJson(jsonMessage, Payload.class);
 			RequestDTO requestDTO = new RequestDTO();
-			requestDTO.setBusinessSegment(m.getBus_seg_id());
-			requestDTO.setPlatform(m.getClm_adjd_pltfm_id());
+			requestDTO.setBusinessSegment(m.getBusinesssegment());
+			requestDTO.setPlatform(m.getPlatform());
 			requestDTO.setStartServiceDate(m.getStrt_srvc_dt());
 //			requestDTO.setStartServiceDate(getFormattedTZDateFromString(m.getStrt_srvc_dt()));
 			requestDTO.setProduct(m.getProduct());
@@ -213,18 +213,58 @@ public class JsonStreamProcessor {
 		try {
 			String[] fieldValues = message.split(Constants.FIELD_DELIMITER);
 			Payload m = new Payload();
-			m.setClm_loc_typ_cd(fieldValues[0]);
-			m.setClm_adjd_pltfm_id(fieldValues[1]);
-			m.setClm_fl_id(fieldValues[2]);
-			m.setStrt_srvc_dt(fieldValues[3]);
-			m.setSubgroup(fieldValues[4]);
-			m.setMng_hlth_subpln_nm(fieldValues[5]);
-			m.setMng_hlth_pln_nm(fieldValues[6]);
-			m.setSrvc_loc_prov_id(fieldValues[7]);
-			m.setClm_id(fieldValues[8]);
-			m.setPtnt_src_sys_id(getLongValue(fieldValues[9]));
-			m.setBus_seg_id(fieldValues[10]);
-			m.setProduct(fieldValues[11]);
+			m.setBusinesssegment(fieldValues[0]);
+			m.setPlatform(fieldValues[1]);
+			m.setProduct(fieldValues[2]);
+			m.setSubgroup(fieldValues[3]);
+			m.setStrt_srvc_dt(fieldValues[4]);
+			m.setSrvc_loc_prov_id(fieldValues[5]);
+			m.setClm_id(fieldValues[6]);
+			m.setPst_dt(fieldValues[7]);
+			m.setDx(fieldValues[8]);
+			m.setPoa(fieldValues[9]);
+			m.setCode_class(fieldValues[10]);
+			m.setCharges(fieldValues[11]);
+			m.setDate(fieldValues[12]);
+			m.setHcpcs(fieldValues[13]);
+			m.setMod_1(fieldValues[14]);
+			m.setMod_2(fieldValues[15]);
+			m.setMod_3(fieldValues[16]);
+			m.setMod_4(fieldValues[17]);
+			m.setPos(fieldValues[18]);
+			m.setRev(fieldValues[19]);
+			m.setTot_units(fieldValues[20]);
+			m.setOp(fieldValues[21]);
+			m.setAdmit_date(fieldValues[22]);
+			m.setBilltype(fieldValues[23]);
+			m.setBirth_date(fieldValues[24]);
+			m.setCondcd(fieldValues[25]);
+			m.setDstat(fieldValues[26]);
+			m.setFacility(fieldValues[27]);
+			m.setFrom_date(fieldValues[28]);
+			m.setNpi(fieldValues[29]);
+			m.setGdr_typ_id(fieldValues[30]);
+			m.setTaxonomy(fieldValues[31]);
+			m.setThru_date(fieldValues[32]);
+			m.setTot_chg(fieldValues[33]);
+			m.setValamt1(fieldValues[34]);
+			m.setValamt2(fieldValues[35]);
+			m.setValamt3(fieldValues[36]);
+			m.setValamt4(fieldValues[37]);
+			m.setValamt5(fieldValues[38]);
+			m.setValamt6(fieldValues[39]);
+			m.setValamt7(fieldValues[40]);
+			m.setValamt8(fieldValues[41]);
+			m.setValcode1(fieldValues[42]);
+			m.setValcode2(fieldValues[43]);
+			m.setValcode3(fieldValues[44]);
+			m.setValcode4(fieldValues[45]);
+			m.setValcode5(fieldValues[46]);
+			m.setValcode6(fieldValues[47]);
+			m.setValcode7(fieldValues[48]);
+			m.setValcode8(fieldValues[49]);
+			m.setPattype(fieldValues[50]);
+			m.setSe(fieldValues[51]);
 
 			return m;
 		}catch(Exception e) {
