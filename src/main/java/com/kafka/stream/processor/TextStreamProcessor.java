@@ -1,4 +1,4 @@
-package com.kafka.stream.processor;
+/*package com.kafka.stream.processor;
 
 import java.util.Properties;
 
@@ -98,3 +98,4 @@ public class TextStreamProcessor {
 		return StringUtils.isEmpty(value)?null:Long.parseLong(value);
 	}
 }
+*/

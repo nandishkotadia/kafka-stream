@@ -31,6 +31,12 @@ import org.springframework.web.client.RestTemplate;
 import com.google.gson.Gson;
 import com.kafka.stream.config.KafkaStreamConfig;
 import com.kafka.stream.model.AccessTokenDTO;
+import com.kafka.stream.model.ActualPayload;
+import com.kafka.stream.model.AlternatePayload;
+import com.kafka.stream.model.Dx;
+import com.kafka.stream.model.EzgControl;
+import com.kafka.stream.model.Line;
+import com.kafka.stream.model.PatientClaim;
 import com.kafka.stream.model.Payload;
 import com.kafka.stream.model.RequestDTO;
 import com.kafka.stream.model.ResponseDTO;
@@ -129,11 +135,91 @@ public class JsonStreamProcessor {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private List flattenValue(Payload p){
 		List payloadList = new ArrayList();
-		payloadList.add(p);
-		payloadList.add(p);
+		payloadList.add(getActualPayload(p));
+		payloadList.add(getAlternatePayload(p));
 		return payloadList;
 	}
 	
+	private ActualPayload getActualPayload(Payload p) {
+		ActualPayload ap = new ActualPayload();
+		ap.setBusinesssegment(p.getBusinesssegment());
+		ap.setPlatform(p.getPlatform());
+		ap.setProduct(p.getProduct());
+		ap.setSubgroup(p.getSubgroup());
+		ap.setStrt_srvc_dt(p.getStrt_srvc_dt());
+		ap.setSrvc_loc_prov_id(p.getSrvc_loc_prov_id());
+		ap.setClm_id(p.getClm_id());
+		ap.setContractId(p.getContractId());
+		return ap;
+	}
+
+	private AlternatePayload getAlternatePayload(Payload p) {
+		AlternatePayload ap = new AlternatePayload();
+		
+		List<Line> lines = new ArrayList<>(); 
+		Line l = new Line();
+		l.setCharges(p.getCharges());
+		l.setDate(p.getDate());
+		l.setHcpcs(p.getHcpcs());
+		l.setMod_1(p.getMod_1());
+		l.setMod_2(p.getMod_2());
+		l.setMod_3(p.getMod_3());
+		l.setMod_4(p.getMod_4());
+		l.setPos(p.getPos());
+		l.setRev(p.getRev());
+		l.setTot_units(p.getTot_units());
+		lines.add(l);
+		
+		EzgControl e = new EzgControl();
+		e.setCode_class(p.getCode_class());
+		e.setOp(p.getOp());
+		e.setPattype(p.getPattype());
+		
+		PatientClaim pc = new PatientClaim();
+		pc.setAdmit_date(p.getAdmit_date());
+		pc.setBilltype(p.getBilltype());
+		pc.setBirth_date(p.getBirth_date());
+		pc.setCondcd(p.getCondcd());
+		pc.setDstat(p.getDstat());
+		pc.setFacility(p.getFacility());
+		pc.setFrom_date(p.getFrom_date());
+		pc.setNpi(p.getNpi());
+		pc.setGdr_typ_id(p.getGdr_typ_id());
+		pc.setTaxonomy(p.getTaxonomy());
+		pc.setThru_date(p.getThru_date());
+		pc.setTot_chg(p.getTot_chg());
+		pc.setValamt1(p.getValamt1());
+		pc.setValamt2(p.getValamt2());
+		pc.setValamt3(p.getValamt3());
+		pc.setValamt4(p.getValamt4());
+		pc.setValamt5(p.getValamt5());
+		pc.setValamt6(p.getValamt6());
+		pc.setValamt7(p.getValamt7());
+		pc.setValamt8(p.getValamt8());
+		pc.setValcode1(p.getValcode1());
+		pc.setValcode2(p.getValcode2());
+		pc.setValcode3(p.getValcode3());
+		pc.setValcode4(p.getValcode4());
+		pc.setValcode5(p.getValcode5());
+		pc.setValcode6(p.getValcode6());
+		pc.setValcode7(p.getValcode7());
+		pc.setValcode8(p.getValcode8());
+		pc.setSex(p.getSex());
+		
+		List<Dx> dxList = new ArrayList<>();
+		Dx dx = new Dx();
+		dx.setDx(p.getDx());
+		dx.setPoa(p.getPoa());
+		dxList.add(dx);
+		
+		ap.setDx(dxList);
+		ap.setEzgControl(e);
+		ap.setLine(lines);
+		ap.setPatientClaim(pc);
+		
+		return ap;
+	}
+
 	private Payload verifyData(Payload m) {
 		try {
 			String token = getAccessToken();
@@ -264,7 +350,7 @@ public class JsonStreamProcessor {
 			m.setValcode7(fieldValues[48]);
 			m.setValcode8(fieldValues[49]);
 			m.setPattype(fieldValues[50]);
-			m.setSe(fieldValues[51]);
+			m.setSex(fieldValues[51]);
 
 			return m;
 		}catch(Exception e) {

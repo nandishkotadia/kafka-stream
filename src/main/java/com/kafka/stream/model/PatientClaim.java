@@ -1,42 +1,7 @@
 package com.kafka.stream.model;
 
-public class Payload {
-
-	/*private String clm_loc_typ_cd;
-	private String clm_adjd_pltfm_id;
-	private String clm_fl_id;
-	private String strt_srvc_dt;
-	private String subgroup;
-	private String mng_hlth_subpln_nm;
-	private String mng_hlth_pln_nm;
-	private String srvc_loc_prov_id;
-	private String clm_id;
-	private Long ptnt_src_sys_id;
-	private String bus_seg_id;
-	private String product;*/
-	private String businesssegment;
-	private String platform;
-	private String product;
-	private String subgroup;
-	private String strt_srvc_dt;
-	private String srvc_loc_prov_id;
-	private String clm_id;
-	private Long contractId;
-	private String pst_dt;
-	private String dx;
-	private String poa;
-	private String code_class;
-	private String charges;
-	private String date;
-	private String hcpcs;
-	private String mod_1;
-	private String mod_2;
-	private String mod_3;
-	private String mod_4;
-	private String pos;
-	private String rev;
-	private String tot_units;
-	private String op;
+public class PatientClaim {
+	
 	private String admit_date;
 	private String billtype;
 	private String birth_date;
@@ -65,141 +30,7 @@ public class Payload {
 	private String valcode6;
 	private String valcode7;
 	private String valcode8;
-	private String pattype;
 	private String sex;
-	
-	public String getBusinesssegment() {
-		return businesssegment;
-	}
-	public void setBusinesssegment(String businesssegment) {
-		this.businesssegment = businesssegment;
-	}
-	public String getPlatform() {
-		return platform;
-	}
-	public void setPlatform(String platform) {
-		this.platform = platform;
-	}
-	public String getProduct() {
-		return product;
-	}
-	public void setProduct(String product) {
-		this.product = product;
-	}
-	public String getSubgroup() {
-		return subgroup;
-	}
-	public void setSubgroup(String subgroup) {
-		this.subgroup = subgroup;
-	}
-	public String getStrt_srvc_dt() {
-		return strt_srvc_dt;
-	}
-	public void setStrt_srvc_dt(String strt_srvc_dt) {
-		this.strt_srvc_dt = strt_srvc_dt;
-	}
-	public String getSrvc_loc_prov_id() {
-		return srvc_loc_prov_id;
-	}
-	public void setSrvc_loc_prov_id(String srvc_loc_prov_id) {
-		this.srvc_loc_prov_id = srvc_loc_prov_id;
-	}
-	public String getClm_id() {
-		return clm_id;
-	}
-	public void setClm_id(String clm_id) {
-		this.clm_id = clm_id;
-	}
-	public String getPst_dt() {
-		return pst_dt;
-	}
-	public void setPst_dt(String pst_dt) {
-		this.pst_dt = pst_dt;
-	}
-	public String getDx() {
-		return dx;
-	}
-	public void setDx(String dx) {
-		this.dx = dx;
-	}
-	public String getPoa() {
-		return poa;
-	}
-	public void setPoa(String poa) {
-		this.poa = poa;
-	}
-	public String getCode_class() {
-		return code_class;
-	}
-	public void setCode_class(String code_class) {
-		this.code_class = code_class;
-	}
-	public String getCharges() {
-		return charges;
-	}
-	public void setCharges(String charges) {
-		this.charges = charges;
-	}
-	public String getDate() {
-		return date;
-	}
-	public void setDate(String date) {
-		this.date = date;
-	}
-	public String getHcpcs() {
-		return hcpcs;
-	}
-	public void setHcpcs(String hcpcs) {
-		this.hcpcs = hcpcs;
-	}
-	public String getMod_1() {
-		return mod_1;
-	}
-	public void setMod_1(String mod_1) {
-		this.mod_1 = mod_1;
-	}
-	public String getMod_2() {
-		return mod_2;
-	}
-	public void setMod_2(String mod_2) {
-		this.mod_2 = mod_2;
-	}
-	public String getMod_3() {
-		return mod_3;
-	}
-	public void setMod_3(String mod_3) {
-		this.mod_3 = mod_3;
-	}
-	public String getMod_4() {
-		return mod_4;
-	}
-	public void setMod_4(String mod_4) {
-		this.mod_4 = mod_4;
-	}
-	public String getPos() {
-		return pos;
-	}
-	public void setPos(String pos) {
-		this.pos = pos;
-	}
-	public String getRev() {
-		return rev;
-	}
-	public void setRev(String rev) {
-		this.rev = rev;
-	}
-	public String getTot_units() {
-		return tot_units;
-	}
-	public void setTot_units(String tot_units) {
-		this.tot_units = tot_units;
-	}
-	public String getOp() {
-		return op;
-	}
-	public void setOp(String op) {
-		this.op = op;
-	}
 	public String getAdmit_date() {
 		return admit_date;
 	}
@@ -368,24 +199,12 @@ public class Payload {
 	public void setValcode8(String valcode8) {
 		this.valcode8 = valcode8;
 	}
-	public String getPattype() {
-		return pattype;
-	}
-	public void setPattype(String pattype) {
-		this.pattype = pattype;
-	}
 	public String getSex() {
 		return sex;
 	}
 	public void setSex(String sex) {
 		this.sex = sex;
 	}
-	public Long getContractId() {
-		return contractId;
-	}
-	public void setContractId(Long contractId) {
-		this.contractId = contractId;
-	}
-
+	
 	
 }
