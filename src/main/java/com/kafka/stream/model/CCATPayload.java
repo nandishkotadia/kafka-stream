@@ -1,6 +1,6 @@
 package com.kafka.stream.model;
 
-public class ActualPayload {
+public class CCATPayload {
 
 	private String businesssegment;
 	private String platform;
@@ -58,6 +58,6 @@ public class ActualPayload {
 	public void setContractId(Long contractId) {
 		this.contractId = contractId;
 	}
-	
-	
+
+
 }

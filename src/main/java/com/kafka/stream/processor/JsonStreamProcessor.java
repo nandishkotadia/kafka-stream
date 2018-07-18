@@ -31,15 +31,18 @@ import org.springframework.web.client.RestTemplate;
 import com.google.gson.Gson;
 import com.kafka.stream.config.KafkaStreamConfig;
 import com.kafka.stream.model.AccessTokenDTO;
-import com.kafka.stream.model.ActualPayload;
-import com.kafka.stream.model.AlternatePayload;
+import com.kafka.stream.model.CCATPayload;
 import com.kafka.stream.model.Dx;
 import com.kafka.stream.model.EzgControl;
+import com.kafka.stream.model.EzgrpPayload;
+import com.kafka.stream.model.InputDTO;
 import com.kafka.stream.model.Line;
 import com.kafka.stream.model.PatientClaim;
 import com.kafka.stream.model.Payload;
 import com.kafka.stream.model.RequestDTO;
 import com.kafka.stream.model.ResponseDTO;
+import com.kafka.stream.model.ResultPayload;
+import com.kafka.stream.model.ValueCodeDTO;
 import com.kafka.stream.util.Constants;
 
 @Component
@@ -99,11 +102,13 @@ public class JsonStreamProcessor {
 				.branch((k, v) -> v!=null);
 		
 		jsonStream = multistreams[0].mapValues(v -> verifyData(v)).filter((k,v) -> (v!=null))
-					.flatMapValues(v -> flattenValue(v))
-				  .map(new KeyValueMapper<String, Object, KeyValue<String, String>>() { 
+					.mapValues(v -> flattenValue(v))
+				  .map(new KeyValueMapper<String, ResultPayload, KeyValue<String, String>>() { 
 			            @Override 
-			            public KeyValue<String, String> apply(String key, Object value) { 
-			                return new KeyValue<>(null, gson.toJson(value));
+			            public KeyValue<String, String> apply(String key, ResultPayload value) {
+			            	String valueStr = gson.toJson(value.getCcatPayload()) + "|" + gson.toJson(value.getEzgrpPayload());
+			            	logger.info("Result:"+ valueStr);
+			                return new KeyValue<>(null, valueStr);
 			       }});
 		
 		
@@ -132,16 +137,15 @@ public class JsonStreamProcessor {
 		
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private List flattenValue(Payload p){
-		List payloadList = new ArrayList();
-		payloadList.add(getActualPayload(p));
-		payloadList.add(getAlternatePayload(p));
-		return payloadList;
+	private ResultPayload flattenValue(Payload p){
+		ResultPayload r = new ResultPayload();
+		r.setCcatPayload(getActualPayload(p));
+		r.setEzgrpPayload(getAlternatePayload(p));
+		return r;
 	}
 	
-	private ActualPayload getActualPayload(Payload p) {
-		ActualPayload ap = new ActualPayload();
+	private CCATPayload getActualPayload(Payload p) {
+		CCATPayload ap = new CCATPayload();
 		ap.setBusinesssegment(p.getBusinesssegment());
 		ap.setPlatform(p.getPlatform());
 		ap.setProduct(p.getProduct());
@@ -153,18 +157,19 @@ public class JsonStreamProcessor {
 		return ap;
 	}
 
-	private AlternatePayload getAlternatePayload(Payload p) {
-		AlternatePayload ap = new AlternatePayload();
+	private EzgrpPayload getAlternatePayload(Payload p) {
 		
 		List<Line> lines = new ArrayList<>(); 
 		Line l = new Line();
 		l.setCharges(p.getCharges());
 		l.setDate(p.getDate());
 		l.setHcpcs(p.getHcpcs());
-		l.setMod_1(p.getMod_1());
-		l.setMod_2(p.getMod_2());
-		l.setMod_3(p.getMod_3());
-		l.setMod_4(p.getMod_4());
+		List<String> mod = new ArrayList<>();
+		mod.add(p.getMod_1());
+		mod.add(p.getMod_2());
+		mod.add(p.getMod_3());
+		mod.add(p.getMod_4());
+		l.setMod(mod);
 		l.setPos(p.getPos());
 		l.setRev(p.getRev());
 		l.setTot_units(p.getTot_units());
@@ -172,7 +177,6 @@ public class JsonStreamProcessor {
 		
 		EzgControl e = new EzgControl();
 		e.setCode_class(p.getCode_class());
-		e.setOp(p.getOp());
 		e.setPattype(p.getPattype());
 		
 		PatientClaim pc = new PatientClaim();
@@ -188,22 +192,16 @@ public class JsonStreamProcessor {
 		pc.setTaxonomy(p.getTaxonomy());
 		pc.setThru_date(p.getThru_date());
 		pc.setTot_chg(p.getTot_chg());
-		pc.setValamt1(p.getValamt1());
-		pc.setValamt2(p.getValamt2());
-		pc.setValamt3(p.getValamt3());
-		pc.setValamt4(p.getValamt4());
-		pc.setValamt5(p.getValamt5());
-		pc.setValamt6(p.getValamt6());
-		pc.setValamt7(p.getValamt7());
-		pc.setValamt8(p.getValamt8());
-		pc.setValcode1(p.getValcode1());
-		pc.setValcode2(p.getValcode2());
-		pc.setValcode3(p.getValcode3());
-		pc.setValcode4(p.getValcode4());
-		pc.setValcode5(p.getValcode5());
-		pc.setValcode6(p.getValcode6());
-		pc.setValcode7(p.getValcode7());
-		pc.setValcode8(p.getValcode8());
+		List<ValueCodeDTO> valueCodeList = new ArrayList<>();
+		valueCodeList.add(getValueCodeList(p.getValcode1(), p.getValamt1()));
+		valueCodeList.add(getValueCodeList(p.getValcode2(), p.getValamt2()));
+		valueCodeList.add(getValueCodeList(p.getValcode3(), p.getValamt3()));
+		valueCodeList.add(getValueCodeList(p.getValcode4(), p.getValamt4()));
+		valueCodeList.add(getValueCodeList(p.getValcode5(), p.getValamt5()));
+		valueCodeList.add(getValueCodeList(p.getValcode6(), p.getValamt6()));
+		valueCodeList.add(getValueCodeList(p.getValcode7(), p.getValamt7()));
+		valueCodeList.add(getValueCodeList(p.getValcode8(), p.getValamt8()));
+		pc.setValueCodeList(valueCodeList);
 		pc.setSex(p.getSex());
 		
 		List<Dx> dxList = new ArrayList<>();
@@ -212,12 +210,25 @@ public class JsonStreamProcessor {
 		dx.setPoa(p.getPoa());
 		dxList.add(dx);
 		
-		ap.setDx(dxList);
-		ap.setEzgControl(e);
-		ap.setLine(lines);
-		ap.setPatientClaim(pc);
+		InputDTO i = new InputDTO();
+		i.setOp(p.getOp());
+		i.setDx(dxList);
+		i.setEzgControl(e);
+		i.setLine(lines);
+		i.setPatientClaim(pc);
+		
+		EzgrpPayload ap = new EzgrpPayload();
+		ap.setPostDate(p.getPst_dt());
+		ap.setInput(i);
 		
 		return ap;
+	}
+
+	private ValueCodeDTO getValueCodeList(String valcode, String valamt) {
+		ValueCodeDTO v = new ValueCodeDTO();
+		v.setValcode(valcode);
+		v.setValamt(valamt);
+		return v;
 	}
 
 	private Payload verifyData(Payload m) {
@@ -243,6 +254,7 @@ public class JsonStreamProcessor {
 				headers.setContentType(MediaType.APPLICATION_JSON);
 				headers.add("Authorization", token);
 				HttpEntity entity = new HttpEntity<>(requestDTO, headers);
+				logger.info("API Request Msg:"+ gson.toJson(requestDTO));
 				ResponseDTO response = restTemplate.postForObject(validateUrl, entity, ResponseDTO.class);
 				
 				Long contractId = response.getData();

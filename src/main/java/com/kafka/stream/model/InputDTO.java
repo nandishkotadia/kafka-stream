@@ -2,12 +2,19 @@ package com.kafka.stream.model;
 
 import java.util.List;
 
-public class AlternatePayload {
-
+public class InputDTO {
 	private EzgControl EzgControl;
 	private PatientClaim PatientClaim;
 	private List<Dx> Dx;
 	private List<Line> Line;
+	private String Op;
+	
+	public String getOp() {
+		return Op;
+	}
+	public void setOp(String op) {
+		Op = op;
+	}
 	public EzgControl getEzgControl() {
 		return EzgControl;
 	}
@@ -32,5 +39,4 @@ public class AlternatePayload {
 	public void setLine(List<Line> line) {
 		Line = line;
 	}
-	
 }

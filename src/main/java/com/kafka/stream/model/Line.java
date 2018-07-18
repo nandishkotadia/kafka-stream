@@ -1,18 +1,24 @@
 package com.kafka.stream.model;
 
+import java.util.List;
+
 public class Line {
 
-	private String charges;
+	
 	private String date;
 	private String hcpcs;
-	private String mod_1;
-	private String mod_2;
-	private String mod_3;
-	private String mod_4;
-	private String pos;
 	private String rev;
 	private String tot_units;
+	private String charges;
+	private List<String> mod;
+	private String pos;
 	
+	public List<String> getMod() {
+		return mod;
+	}
+	public void setMod(List<String> mod) {
+		this.mod = mod;
+	}
 	public String getCharges() {
 		return charges;
 	}
@@ -30,30 +36,6 @@ public class Line {
 	}
 	public void setHcpcs(String hcpcs) {
 		this.hcpcs = hcpcs;
-	}
-	public String getMod_1() {
-		return mod_1;
-	}
-	public void setMod_1(String mod_1) {
-		this.mod_1 = mod_1;
-	}
-	public String getMod_2() {
-		return mod_2;
-	}
-	public void setMod_2(String mod_2) {
-		this.mod_2 = mod_2;
-	}
-	public String getMod_3() {
-		return mod_3;
-	}
-	public void setMod_3(String mod_3) {
-		this.mod_3 = mod_3;
-	}
-	public String getMod_4() {
-		return mod_4;
-	}
-	public void setMod_4(String mod_4) {
-		this.mod_4 = mod_4;
 	}
 	public String getPos() {
 		return pos;
