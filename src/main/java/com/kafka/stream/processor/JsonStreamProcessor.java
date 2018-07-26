@@ -12,6 +12,7 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.TopologyTestDriver;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
 import org.slf4j.Logger;
@@ -88,7 +89,20 @@ public class JsonStreamProcessor {
 	
 	@SuppressWarnings("unchecked")
 	public void process(String streamEvent, String threadName) {
+		KafkaStreams streams = (KafkaStreams) config(streamEvent, threadName, false);
+		streams.cleanUp();
+		streams.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+			@Override
+			public void uncaughtException(Thread t, Throwable e) {
+				logger.error("Uncaught exception in Thread {} - {}",t,e.getMessage());
+			}
+		});
+		streams.start();
+		Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
 		
+	}
+	
+	public Object config(String streamEvent, String threadName, boolean isTest) {
 		Properties streamsConfiguration = kafkaStreamConfig.getStreamConfiguration(streamEvent,threadName);
 	    Serde<String> stringSerde = Serdes.String();
 
@@ -124,20 +138,14 @@ public class JsonStreamProcessor {
 		jsonStream.to(KAFKA_TOPIC_JSON_MESSAGE);
 		
 		Topology topology = builder.build();
-		KafkaStreams streams = new KafkaStreams(topology, streamsConfiguration);
-		streams.cleanUp();
-		streams.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-			@Override
-			public void uncaughtException(Thread t, Throwable e) {
-				logger.error("Uncaught exception in Thread {} - {}",t,e.getMessage());
-			}
-		});
-		streams.start();
-		Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-		
+		if(isTest) {
+			return new TopologyTestDriver(topology, streamsConfiguration);
+		} else {
+			return new KafkaStreams(topology, streamsConfiguration);
+		}
 	}
 
-	private ResultPayload flattenValue(Payload p){
+	public ResultPayload flattenValue(Payload p){
 		ResultPayload r = new ResultPayload();
 		r.setCcatPayload(getActualPayload(p));
 		r.setEzgrpPayload(getAlternatePayload(p));
@@ -231,7 +239,7 @@ public class JsonStreamProcessor {
 		return v;
 	}
 
-	private Payload verifyData(Payload m) {
+	public Payload verifyData(Payload m) {
 		try {
 			String token = getAccessToken();
 			logger.info("Token: "+token);
@@ -279,7 +287,7 @@ public class JsonStreamProcessor {
 		return null;
 	}
 
-	private String getAccessToken() {
+	public String getAccessToken() {
 		Date currentDate = new Date();
 		if(!StringUtils.isEmpty(accessToken) && currentDate.before(expiryDate)) {
 			return accessToken;
@@ -304,7 +312,7 @@ public class JsonStreamProcessor {
 		return null;
 	}
 	
-	private Payload mapTextValues(String message) {
+	public Payload mapTextValues(String message) {
 		if(StringUtils.isEmpty(message)) {
 			return null;
 		}
